@@ -1,10 +1,10 @@
 # telegram-info-bot
 Telegram Analytics Bot recopila y genera estadísticas de grupos de Telegram para monitorear el tráfico. Fácil de configurar y personalizar.
 
-Herramientas: 
+Tecnologías: 
 - NodeJs
 - Mysql
-- 
+
 ¿Como utilizar este bot?
 - Primero debes crear un bot en Telegram.
 - Debes guardar el token de tu bot.
