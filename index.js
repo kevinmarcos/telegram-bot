@@ -1,17 +1,40 @@
 const TelegramBot = require('node-telegram-bot-api');
-
-const token = 'TOKEN_BOT_TELEGRAM'; //Cambiar por el token del bot de telegram
-
+const token = '6238926102:AAFAJ3VTTYxXxE7G5orEHeaFNiboxh1K5r0'; //Cambiar por el token del bot de telegram
 const bot = new TelegramBot(token, { polling: true });
-
 const mysql = require('mysql2/promise');
+const express = require("express");
+const app = express();
+const http = require("http");
+const server = http.createServer(app);
+
+app.use(express.json());
+
 
 //Conexion a la base de datos
 const connection = mysql.createPool({
-  host: 'TU_HOST_DE_MYSQL',
-  user: 'TU_USUARIO_DE_MYSQL',
-  password: 'TU_PASSWORD_DE_MYSQL',
-  database: 'TU_BASE_DE_DATOS'
+  port : process.env.DB_PORT || 3306,
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || 'usuario1',
+  database: process.env.DB_DATABASE || 'telegram_bot'
+});
+
+app.get('/api/mensajes', async (req, res) => {
+  try {
+    const sql = 'SELECT * FROM messages';
+    const mostrar = await connection.query(sql);
+    res.json(mostrar[0]);
+} catch (error) {
+    return res.status(500).json({
+        message: 'Algo ocurrio mal'
+    })
+}
+});
+
+app.get('/api/conteo', async (req, res) => {
+  const sql = 'SELECT * FROM conteo';
+  const mostrar = await connection.query(sql);
+  res.json(mostrar[0]);
 });
 
 //Variables para el conteo de mensajes
@@ -26,10 +49,10 @@ bot.on('message', async (msg) => {
   const userId = msg.from.id;
   const username = msg.from.username;
   const message = msg.text;
-
+  
   //Condicional para el conteo de mensajes
   if (firstinterval == undefined) {
-
+ 
     firstinterval = new Date();
     messagesCount++;
 
@@ -43,9 +66,10 @@ bot.on('message', async (msg) => {
     firstinterval = undefined;
 
   } else {
+
     messagesCount++;
     intervalEnd = new Date();
-    console.log(messagesCount);
+
   }
 
   //Insertar datos del usuario y el mensaje en la base de datos
@@ -69,9 +93,21 @@ async function enviarDatos(inicio, fin, cantidad) {
     const conn = await connection.getConnection();
     const sql = `INSERT INTO conteo (fecha_inicio, fecha_fin, cantidad) VALUES ('${inicio}' ,'${fin}', '${cantidad}')`;
     await conn.query(sql);
+
     conn.release();
   } catch (error) {
     console.error(error);
   }
 
 }
+
+app.use((req, res, next) => {
+  res.status(404).json({
+      message:'Endpoint not found'
+  })
+})
+
+
+app.listen(3000, () => {
+  console.log('Servidor iniciado en el puerto 3000!');
+});
